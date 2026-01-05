@@ -159,3 +159,13 @@ All server errors are logged to a file located at **logs/error.log**. This log f
 
 ## License
 This project is open-source and available under the MIT License. Feel free to modify and use it as a learning resource.
+
+## Star History
+
+<a href="https://www.star-history.com/#FarrelAD/Basic-PHP-RESTful-API&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=FarrelAD/Basic-PHP-RESTful-API&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=FarrelAD/Basic-PHP-RESTful-API&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=FarrelAD/Basic-PHP-RESTful-API&type=date&legend=top-left" />
+ </picture>
+</a>
