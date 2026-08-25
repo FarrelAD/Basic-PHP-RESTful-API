@@ -1,3 +1,5 @@
+
+
 # Basic RESTful API in PHP
 
 ## Overview
@@ -59,6 +61,7 @@ To get started with this project, follow the steps below.
 - PHP 7.4 or higher
 - A web server (e.g., Apache, Nginx, or PHP built in web server)
 - Composer (for dependency management)
+- MySQL (or a compatible database server) for the database connection
 
 ### Installation
 1. Clone the repository:
