@@ -6,6 +6,9 @@ namespace App\Utils;
 
 class Request
 {
+    /**
+     * @return array<mixed>
+     */
     public static function getJson(?string $rawInput = null): array
     {
         $raw = $rawInput ?? file_get_contents('php://input');

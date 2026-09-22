@@ -15,13 +15,13 @@ if ($requestUri === "/" || $requestUri === "") {
         case "GET":
             Response::json(200, [
                 "status" => "success",
-                "message" => "Welcome to Basic PHP RESTful API"
+                "message" => "Welcome to Basic PHP RESTful API",
             ]);
             break;
         default:
             Response::json(405, [
                 "status" => "error",
-                "message" => "Method Not Allowed"
+                "message" => "Method Not Allowed",
             ]);
             break;
     }
@@ -36,7 +36,7 @@ if ($requestUri === "/" || $requestUri === "") {
         default:
             Response::json(405, [
                 "status" => "error",
-                "message" => "Method Not Allowed"
+                "message" => "Method Not Allowed",
             ]);
             break;
     }
@@ -55,13 +55,13 @@ if ($requestUri === "/" || $requestUri === "") {
         default:
             Response::json(405, [
                 "status" => "error",
-                "message" => "Method Not Allowed"
+                "message" => "Method Not Allowed",
             ]);
             break;
     }
 } else {
     Response::json(404, [
         "status" => "error",
-        "message" => "Error 404! No route found!"
+        "message" => "Error 404! No route found!",
     ]);
 }

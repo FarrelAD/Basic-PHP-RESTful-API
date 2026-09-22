@@ -28,6 +28,9 @@ class User
         }
     }
 
+    /**
+     * @return array<mixed>|null
+     */
     public function getAllUsers(): ?array
     {
         try {
@@ -44,6 +47,9 @@ class User
         }
     }
 
+    /**
+     * @return array<mixed>|null
+     */
     public function getUserById(int $id): ?array
     {
         try {
@@ -64,6 +70,9 @@ class User
         }
     }
 
+    /**
+     * @return array<mixed>|null
+     */
     public function getUserByName(string $name): ?array
     {
         try {

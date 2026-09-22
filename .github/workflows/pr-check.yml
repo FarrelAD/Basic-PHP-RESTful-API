@@ -1,0 +1,149 @@
+name: Pull Request Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Job 1 – PHP Syntax Lint
+  # ──────────────────────────────────────────────
+  syntax-lint:
+    name: Syntax Lint (php -l)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Check PHP syntax on all source files
+        run: find src/ public/ -name "*.php" -print0 | xargs -0 -n1 php -l
+
+  # ──────────────────────────────────────────────
+  # Job 2 – Code Style Linter (PHP_CodeSniffer)
+  # ──────────────────────────────────────────────
+  lint:
+    name: Lint (phpcs / PSR-12)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: cs2pr
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: vendor
+          key: composer-8.3-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-8.3-
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: Run PHP_CodeSniffer
+        run: vendor/bin/phpcs -q --report=checkstyle | cs2pr
+
+  # ──────────────────────────────────────────────
+  # Job 3 – Code Formatter Check (PHP CS Fixer)
+  # ──────────────────────────────────────────────
+  format:
+    name: Format Check (php-cs-fixer)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: vendor
+          key: composer-8.3-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-8.3-
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: Run PHP CS Fixer (dry run — fails on any formatting issue)
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
+
+  # ──────────────────────────────────────────────
+  # Job 4 – Static Type Analysis (PHPStan)
+  # ──────────────────────────────────────────────
+  analyse:
+    name: Static Analysis (phpstan)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: vendor
+          key: composer-8.3-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-8.3-
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --no-progress
+
+  # ──────────────────────────────────────────────
+  # Job 5 – Unit Tests (PHPUnit)
+  # ──────────────────────────────────────────────
+  test:
+    name: Tests (phpunit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo, pdo_sqlite, mbstring, xml
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: vendor
+          key: composer-8.3-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-8.3-
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: Run PHPUnit tests
+        run: vendor/bin/phpunit --colors=always
