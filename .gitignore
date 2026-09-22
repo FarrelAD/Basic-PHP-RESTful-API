@@ -1,3 +1,6 @@
 vendor/
 .env
 logs/
+
+# testing tools
+.phpunit.cache
