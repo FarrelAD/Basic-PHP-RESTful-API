@@ -26,12 +26,12 @@ class UsersController
             Response::json(200, [
                 "status" => "success",
                 "message" => "Successfully retrieved all users",
-                "data" => $result ?? []
+                "data" => $result ?? [],
             ]);
         } catch (Exception $e) {
             Response::json(500, [
                 "status" => "error",
-                "message" => "Internal server error"
+                "message" => "Internal server error",
             ]);
         }
     }
@@ -44,7 +44,7 @@ class UsersController
             if ($result === null) {
                 Response::json(404, [
                     "status" => "error",
-                    "message" => "User not found"
+                    "message" => "User not found",
                 ]);
                 return;
             }
@@ -52,12 +52,12 @@ class UsersController
             Response::json(200, [
                 "status" => "success",
                 "message" => "Successfully retrieved user",
-                "data" => $result
+                "data" => $result,
             ]);
         } catch (Exception $e) {
             Response::json(500, [
                 "status" => "error",
-                "message" => "Internal server error"
+                "message" => "Internal server error",
             ]);
         }
     }
@@ -74,7 +74,8 @@ class UsersController
             if ($name === '' || $age === null || $job === '') {
                 Response::json(422, [
                     "status" => "error",
-                    "message" => "Unprocessable Entity: 'name' (string), 'age' (int), and 'job' (string) are required in JSON body"
+                    "message" => "Unprocessable Entity: 'name' (string), " .
+                                 "'age' (int), and 'job' (string) are required in JSON body",
                 ]);
                 return;
             }
@@ -83,7 +84,7 @@ class UsersController
             if (!$success) {
                 Response::json(400, [
                     "status" => "error",
-                    "message" => "Failed to create user"
+                    "message" => "Failed to create user",
                 ]);
                 return;
             }
@@ -93,12 +94,12 @@ class UsersController
             Response::json(201, [
                 "status" => "success",
                 "message" => "Successfully created user",
-                "data" => $createdUser
+                "data" => $createdUser,
             ]);
         } catch (Exception $e) {
             Response::json(500, [
                 "status" => "error",
-                "message" => "Internal server error"
+                "message" => "Internal server error",
             ]);
         }
     }
@@ -111,7 +112,7 @@ class UsersController
             if ($existingUser === null) {
                 Response::json(404, [
                     "status" => "error",
-                    "message" => "User not found"
+                    "message" => "User not found",
                 ]);
                 return;
             }
@@ -121,7 +122,7 @@ class UsersController
             if (empty($inputData)) {
                 Response::json(400, [
                     "status" => "error",
-                    "message" => "Request body cannot be empty"
+                    "message" => "Request body cannot be empty",
                 ]);
                 return;
             }
@@ -129,7 +130,7 @@ class UsersController
             if (!isset($inputData['name']) && !isset($inputData['age']) && !isset($inputData['job'])) {
                 Response::json(422, [
                     "status" => "error",
-                    "message" => "Provide at least one field to update ('name', 'age', or 'job')"
+                    "message" => "Provide at least one field to update ('name', 'age', or 'job')",
                 ]);
                 return;
             }
@@ -151,12 +152,12 @@ class UsersController
             Response::json(200, [
                 "status" => "success",
                 "message" => "Successfully updated user",
-                "data" => $updatedUser
+                "data" => $updatedUser,
             ]);
         } catch (Exception $e) {
             Response::json(500, [
                 "status" => "error",
-                "message" => "Internal server error"
+                "message" => "Internal server error",
             ]);
         }
     }
@@ -169,7 +170,7 @@ class UsersController
             if ($existingUser === null) {
                 Response::json(404, [
                     "status" => "error",
-                    "message" => "User not found"
+                    "message" => "User not found",
                 ]);
                 return;
             }
@@ -178,12 +179,12 @@ class UsersController
 
             Response::json(200, [
                 "status" => "success",
-                "message" => "Successfully deleted user"
+                "message" => "Successfully deleted user",
             ]);
         } catch (Exception $e) {
             Response::json(500, [
                 "status" => "error",
-                "message" => "Internal server error"
+                "message" => "Internal server error",
             ]);
         }
     }

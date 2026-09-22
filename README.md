@@ -1,5 +1,10 @@
 # Basic RESTful API in PHP
 
+[![PR Check](https://github.com/FarrelAD/Basic-PHP-RESTful-API/actions/workflows/pr-check.yml/badge.svg)](https://github.com/FarrelAD/Basic-PHP-RESTful-API/actions/workflows/pr-check.yml)
+[![Deploy](https://github.com/FarrelAD/Basic-PHP-RESTful-API/actions/workflows/deploy.yml/badge.svg)](https://github.com/FarrelAD/Basic-PHP-RESTful-API/actions/workflows/deploy.yml)
+![PHP](https://img.shields.io/badge/PHP-8.3-blue?logo=php)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 ## Overview
 This project is a RESTful API built in native PHP following modern PHP standards (PSR-4 autoloading with PascalCase namespace directories, PSR-12 coding standard, strict types, pure JSON REST conventions, and automated PHPUnit testing). It provides endpoints to manage user data, allowing clients to perform full CRUD (Create, Read, Update, Delete) operations using clean JSON payloads.
 
@@ -205,8 +210,82 @@ composer dev
 ```
 The API will be available at `http://localhost:8000`.
 
+---
+
+## Developer Tools
+
+This project ships three code-quality tools as `require-dev` dependencies, each accessible via a Composer shortcut:
+
+| Tool | Command | Purpose |
+|------|---------|---------|
+| [PHP_CodeSniffer](https://github.com/squizlabs/PHP_CodeSniffer) | `composer lint` | Checks code against the **PSR-12** standard |
+| [PHP CS Fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer) | `composer format` | Verifies formatting without writing (dry-run) |
+| [PHP CS Fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer) | `composer format:fix` | Auto-fixes formatting issues in place |
+| [PHPStan](https://phpstan.org/) | `composer analyse` | Static type analysis at **level 6** |
+
+### Configuration files
+- `phpcs.xml.dist` — PHP_CodeSniffer rules (PSR-12, targets `src/` and `public/`)
+- `.php-cs-fixer.dist.php` — PHP CS Fixer rules (PSR-12 + strict types + import ordering)
+- `phpstan.neon` — PHPStan settings (level 6, targets `src/`)
+
+---
+
+## CI/CD Pipeline
+
+This project uses **GitHub Actions** with two separate, purpose-built workflows.
+
+### 1. PR Check (`.github/workflows/pr-check.yml`)
+
+Triggered automatically on every **Pull Request targeting `main`**. All jobs run in **parallel** on PHP 8.3:
+
+```
+PR → main
+ ├── syntax-lint   php -l on all .php files
+ ├── lint          phpcs (PSR-12)
+ ├── format        php-cs-fixer --dry-run (no write)
+ ├── analyse       phpstan (level 6)
+ └── test          phpunit
+```
+
+All five checks must pass before a PR is considered safe to merge.
+
+### 2. Deploy (`.github/workflows/deploy.yml`)
+
+Triggered **manually only** via the GitHub Actions UI (`workflow_dispatch`). Inputs:
+
+| Input | Options | Default |
+|-------|---------|---------|
+| `environment` | `staging` / `production` | `staging` |
+| `skip_tests` | `true` / `false` | `false` |
+
+Jobs run **sequentially**:
+
+```
+Manual trigger
+ └── test     Full test suite + syntax check
+      └── build    composer --no-dev --optimize-autoloader → ZIP artifact
+           └── deploy   Upload artifact → deploy stub → smoke test stub
+```
+
+To wire up real deployment, edit the `deploy` step in `.github/workflows/deploy.yml` and add your secrets (SSH host, key, deploy path, etc.) to the GitHub repository's **Settings → Secrets and variables → Actions**.
+
+**Required GitHub Secrets for Deployment:**
+- `SSH_HOST`: The IP address or domain of your VPS.
+- `SSH_USER`: The SSH username (e.g., `ubuntu` or `root`).
+- `SSH_PRIVATE_KEY`: Your SSH private key for authentication.
+- `DEPLOY_PATH`: The absolute path on your server where the app should be deployed (e.g., `/var/www/api`).
+- `SSH_PORT`: (Optional) Custom SSH port, defaults to `22`.
+
+The deployment uses a zero-downtime symlink approach:
+- Releases are stored in `$DEPLOY_PATH/releases/<commit-hash>`
+- A persistent environment file is kept at `$DEPLOY_PATH/shared/.env`
+- The live site points to `$DEPLOY_PATH/current`
+
+---
+
 ## License
 This project is open-source and available under the MIT License. Feel free to modify and use it as a learning resource.
+
 
 ## Star History
 

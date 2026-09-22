@@ -6,6 +6,9 @@ namespace App\Utils;
 
 class Response
 {
+    /**
+     * @param array<mixed> $payload
+     */
     public static function json(int $statusCode, array $payload): void
     {
         http_response_code($statusCode);
