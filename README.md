@@ -1,3 +1,5 @@
+
+
 # Basic RESTful API in PHP
 
 [![PR Check](https://github.com/FarrelAD/Basic-PHP-RESTful-API/actions/workflows/pr-check.yml/badge.svg)](https://github.com/FarrelAD/Basic-PHP-RESTful-API/actions/workflows/pr-check.yml)
@@ -176,6 +178,7 @@ All request and response bodies use JSON (`Content-Type: application/json`).
 ### Prerequisites
 - PHP 7.4 or higher (PHP 8.x recommended)
 - MySQL / MariaDB database
+- A web server (e.g., Apache, Nginx, or PHP built in web server)
 - Composer
 
 ### Installation
