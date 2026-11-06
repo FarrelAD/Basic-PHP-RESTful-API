@@ -1,3 +1,21 @@
 vendor/
 .env
 logs/
+
+# Testing tools
+.phpunit.cache
+
+# PHP_CodeSniffer
+.phpcs-cache
+
+# PHP CS Fixer
+.php-cs-fixer.cache
+
+# Build output
+dist/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

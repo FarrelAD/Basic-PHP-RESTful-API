@@ -1,0 +1,178 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target deployment environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+      skip_tests:
+        description: "Skip tests before deploying (not recommended)"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Job 1 – Full Test Suite
+  # ──────────────────────────────────────────────
+  test:
+    name: "Test Suite (PHP 8.3)"
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_tests }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo, pdo_sqlite, mbstring, xml
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: vendor
+          key: composer-deploy-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-deploy-
+
+      - name: Install Composer dependencies (with dev)
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: Run syntax check
+        run: find src/ public/ -name "*.php" -print0 | xargs -0 -n1 php -l
+
+      - name: Run PHPUnit tests
+        run: vendor/bin/phpunit --colors=always
+
+  # ──────────────────────────────────────────────
+  # Job 2 – Production Build
+  # ──────────────────────────────────────────────
+  build:
+    name: "Build (production)"
+    runs-on: ubuntu-latest
+    needs: test
+    # Always run build: even when tests were skipped
+    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo, mbstring, xml
+          coverage: none
+
+      - name: Install production Composer dependencies only
+        run: |
+          composer install \
+            --no-dev \
+            --optimize-autoloader \
+            --classmap-authoritative \
+            --no-progress \
+            --prefer-dist \
+            --no-interaction
+
+      - name: Create .env from example (CI placeholder)
+        run: cp .env.example .env
+
+      - name: Verify autoloader integrity
+        run: php -r "require 'vendor/autoload.php'; echo 'Autoloader OK' . PHP_EOL;"
+
+      - name: Package release artifact
+        run: |
+          mkdir -p dist
+          zip -r dist/release-${{ github.sha }}.zip \
+            public/ src/ vendor/ .env.example composer.json \
+            --exclude "*.git*"
+          echo "📦 Build artifact: dist/release-${{ github.sha }}.zip"
+          ls -lh dist/
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ github.sha }}
+          path: dist/release-${{ github.sha }}.zip
+          retention-days: 7
+
+  # ──────────────────────────────────────────────
+  # Job 3 – Deploy
+  # ──────────────────────────────────────────────
+  deploy:
+    name: "Deploy → ${{ inputs.environment }}"
+    runs-on: ubuntu-latest
+    needs: build
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Download release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-${{ github.sha }}
+          path: dist/
+
+      - name: Copy artifact to server via SCP
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          source: "dist/release-${{ github.sha }}.zip"
+          target: "/tmp/"
+
+      - name: Extract and deploy via SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          SHA: ${{ github.sha }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          envs: DEPLOY_PATH,SHA
+          script: |
+            # 1. Create releases and shared directories if they don't exist
+            mkdir -p $DEPLOY_PATH/releases
+            mkdir -p $DEPLOY_PATH/shared
+            
+            # 2. Extract artifact into a new release folder
+            mkdir -p $DEPLOY_PATH/releases/$SHA
+            unzip -q /tmp/dist/release-$SHA.zip -d $DEPLOY_PATH/releases/$SHA
+            
+            # 3. Ensure shared .env exists, then link it
+            touch $DEPLOY_PATH/shared/.env
+            ln -sf $DEPLOY_PATH/shared/.env $DEPLOY_PATH/releases/$SHA/.env
+            
+            # 4. Swap the "current" symlink for zero-downtime deployment
+            ln -sfn $DEPLOY_PATH/releases/$SHA $DEPLOY_PATH/current
+            
+            # 5. Clean up the temp zip file
+            rm -f /tmp/dist/release-$SHA.zip
+            
+            # 6. Keep only the last 5 releases (cleanup)
+            ls -dt $DEPLOY_PATH/releases/* | tail -n +6 | xargs -d '\n' rm -rf -- || true
+            
+            echo "✅ Successfully deployed $SHA to $DEPLOY_PATH/current"
+
+      - name: Post-deploy smoke test (stub)
+        run: |
+          echo "🔍 Running smoke test against ${{ inputs.environment }}..."
+          echo "👉 Add curl/http check against your deployed URL here:"
+          echo '   curl -sf https://your-domain.com/ | grep "Welcome to Basic PHP RESTful API"'
+          echo "✅ Smoke test stub passed."
